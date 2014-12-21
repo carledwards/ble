@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+
+    <TextView xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/drawer_item_text"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:gravity="center_vertical"
+        android:text="sdsdsd"
+        android:paddingLeft="4dp"
+        android:background="@drawable/navigation_drawer_list_item_selector"
+        android:textColor="@color/ic_drawer_text_color"
+        android:textSize="16sp"/>
+

@@ -1,21 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="ble.android.carl.com.ble" >
+    package="com.bengalbot.android" >
+
+
+   <!-- <uses-feature android:name="android.hardware.bluetooth_le" android:required="true"/> -->
+
+    <uses-permission android:name="android.permission.BLUETOOTH"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
 
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme" >
-        <activity
-            android:name="ble.android.carl.com.ble.MainActivity"
-            android:label="@string/app_name" >
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+        android:theme="@style/BLEBaseTheme" >
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+            <activity
+        android:name=".activity.HomeDrawerActivity"
+        android:theme="@style/BLEBaseTheme"
+        android:label="@string/app_name" >
+        <intent-filter>
+            <action android:name="android.intent.action.MAIN" />
+
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent-filter>
+    </activity>
+        <activity
+            android:name=".activity.DiscoveryActivity"
+            android:theme="@style/BLEBaseTheme"
+            android:label="@string/discovery_ble" >
         </activity>
-    </application>
+        <service android:name=".ble.BluetoothLeService" android:enabled="true"/>
+</application>
 
 </manifest>

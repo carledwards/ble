@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <declare-styleable name="com.bengalbot.android">
+
+    <!-- Toolbar -->
+    <attr name="toolbarColor" format="reference|color"/>
+    <attr name="toolbarTextColor" format="reference|color"/>
+
+    </declare-styleable>
+
+</resources>

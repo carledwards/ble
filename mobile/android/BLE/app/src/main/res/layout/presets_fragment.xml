@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:animateLayoutChanges="true"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/empty_message"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        android:layout_centerInParent="true"
+        android:gravity="center"
+        android:textAppearance="@android:style/TextAppearance.Large"
+        android:text="Start Adding Commands!!"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:id="@+id/header"
+        android:background="@color/primary_color">
+    <Spinner
+        android:id="@+id/devices_spinner"
+        android:layout_width="match_parent"
+        android:spinnerStyle="@android:style/Widget.Spinner.DropDown"
+        android:dropDownVerticalOffset="60dp"
+
+        android:layout_height="wrap_content" />
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="right">
+
+
+            <Button
+                android:layout_width="110dp"
+                android:layout_height="wrap_content"
+                android:text="Launch"
+                android:paddingRight="10dp"
+                android:background="@drawable/launch_background_selector"
+                android:textColor="@color/text_icons_color"
+                android:drawableLeft="@drawable/ic_action_launch"
+                android:id="@+id/send_commands"/>
+
+            <Button
+                android:layout_width="110dp"
+                android:layout_height="wrap_content"
+                android:text="Save"
+                android:paddingRight="10dp"
+                android:background="@drawable/launch_background_selector"
+                android:textColor="@color/text_icons_color"
+                android:id="@+id/save"/>
+
+        </LinearLayout>
+    </LinearLayout>
+
+
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/preset_buttons"
+        android:paddingLeft="8dp"
+        android:paddingRight="8dp"
+        android:layout_below="@id/header"
+        android:gravity="right"
+        android:background="@color/accent_color">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:textColor="@color/text_icons_color"
+            android:layout_marginRight="4dp"
+            android:text="Add"/>
+        <ImageButton
+            android:id="@+id/ic_play_btn"
+            android:layout_width="@dimen/icon_button_width"
+            android:layout_height="@dimen/icon_button_width"
+            android:maxWidth="24dp"
+            android:background="@drawable/preset_background_selector"
+            android:src="@drawable/ic_play"/>
+
+        <ImageButton
+            android:id="@+id/ic_brightness_btn"
+            android:layout_width="@dimen/icon_button_width"
+            android:layout_height="@dimen/icon_button_width"
+            android:maxWidth="24dp"
+            android:background="@drawable/preset_background_selector"
+            android:src="@drawable/ic_brightness_medium"/>
+        <ImageButton
+            android:id="@+id/ic_delay_btn"
+            android:layout_width="@dimen/icon_button_width"
+            android:layout_height="@dimen/icon_button_width"
+            android:maxWidth="24dp"
+            android:background="@drawable/preset_background_selector"
+            android:src="@drawable/ic_delay"/>
+
+        <ImageButton
+            android:id="@+id/ic_transition_btn"
+            android:layout_width="@dimen/icon_button_width"
+            android:layout_height="@dimen/icon_button_width"
+            android:maxWidth="24dp"
+            android:background="@drawable/preset_background_selector"
+            android:src="@drawable/ic_transition"/>
+  <ImageButton
+      android:id="@+id/ic_color_btn"
+      android:layout_width="@dimen/icon_button_width"
+            android:layout_height="@dimen/icon_button_width"
+            android:background="@drawable/preset_background_selector"
+            android:src="@drawable/ic_color"/>
+
+        <ImageButton
+            android:id="@+id/ic_stop_btn"
+            android:layout_width="@dimen/icon_button_width"
+            android:layout_height="@dimen/icon_button_width"
+            android:maxWidth="24dp"
+            android:background="@drawable/preset_background_selector"
+            android:src="@drawable/ic_stop"/>
+        </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/preset_buttons"
+        >
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:orientation="vertical"
+            android:id="@+id/preset_holder"
+            android:animateLayoutChanges="true"
+            android:layout_height="wrap_content">
+        </LinearLayout>
+    </ScrollView>
+
+</RelativeLayout>

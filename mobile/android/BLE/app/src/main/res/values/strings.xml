@@ -2,7 +2,23 @@
 <resources>
 
     <string name="app_name">BLE</string>
+    <string name="discovery_ble">Connect to Bluetooth Low Energy</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+    <string name="xmas_setup">Xmas Partee</string>
+    <string name="connect">Connect</string>
+    <string name="configure_color">Set Color</string>
+    <string name="configure_flash_mode">Set Flash Mode</string>
+    <string name="start">Start Command Preset</string>
+    <string name="stop">Stop Command Preset</string>
+    <string formatted="false" name="brightness_value">Brightness: %s </string>
+    <string  name="delay_text">Delay to start: </string>
+    <string  name="delay_hint">Set Delay in milliseconds </string>
+    <string  name="duration_hint">Set the duration in milliseconds </string>
+    <string  name="milliseconds">milliseconds </string>
+    <string  name="color_value">Color set rgb(%1$d,%2$d,%3$d) </string>
+    <string  name="animation_value">Animation Mode: </string>
+    <string  name="transition_linear">Linear Transition: </string>
+    <string  name="transition_flash">Flashing Transition: </string>
 
 </resources>

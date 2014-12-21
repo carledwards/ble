@@ -1,8 +1,22 @@
 <resources>
 
-    <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-        <!-- Customize your theme here. -->
+    <!-- Pandora's Base Theme, this theme should be the parent theme of mostly any other theme.
+       This theme does not use the ActionBar and instead adds the Toolbar by the theme
+       attribute 'usesToolbar' -->
+    <style name="BLEBaseTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="colorPrimary">@color/primary_color</item>
+        <item name="colorPrimaryDark">@color/dark_primary</item>
+        <item name="colorAccent">@color/accent_color</item>
+
+        <item name="toolbarColor">@color/primary_color</item>
+        <item name="toolbarTextColor">@color/text_icons_color</item>
     </style>
 
+
+    <!-- Toolbar theme used by @layout/toolbar -->
+    <style name="ToolbarTheme" parent="Theme.AppCompat.Light">
+        <item name="android:textColorPrimary">?toolbarTextColor</item>
+        <item name="android:textColorSecondary">?toolbarTextColor</item>
+        <item name="android:background">?toolbarColor</item>
+    </style>
 </resources>
