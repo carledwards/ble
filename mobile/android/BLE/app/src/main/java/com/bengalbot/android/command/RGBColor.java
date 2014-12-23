@@ -1,6 +1,7 @@
 package com.bengalbot.android.command;
 
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.Map;
 
 /**
@@ -9,6 +10,7 @@ import java.util.Map;
 public class RGBColor implements Command {
     Map<Properties, Object> properties;
 
+    private static final int DEFAULT_TRANSITION_TIME_IN_MILLISECONDS = 500;
     @Override
     public void create(Map<Properties, Object> properties) {
         this.properties = properties;
@@ -21,6 +23,8 @@ public class RGBColor implements Command {
         int r = 0;
         int g = 0;
         int b = 0;
+        int brightness = 0;
+        int transitionTime = DEFAULT_TRANSITION_TIME_IN_MILLISECONDS;
 
         if (properties.containsKey(Properties.RED)) {
             r = (Integer)properties.get(Properties.RED);
@@ -34,11 +38,25 @@ public class RGBColor implements Command {
             b = (Integer)properties.get(Properties.BLUE);
         }
 
-        return ByteBuffer.allocate(4)
-                .put((byte)COLOR_PROGRAMMING_COMMAND_CODE)
+        if (properties.containsKey(Properties.PERCENTAGE)) {
+            brightness = (Integer)properties.get(Properties.PERCENTAGE);
+        }
+        if (properties.containsKey(Properties.MILLISECONDS)) {
+            transitionTime = (Integer)properties.get(Properties.MILLISECONDS);
+        }
+
+        byte[] bytes = ByteBuffer.allocate(7)
+                .order(ByteOrder.BIG_ENDIAN)
+                .put(COLOR_PROGRAMMING_COMMAND_CODE)
                 .put((byte)r)
                 .put((byte)g)
-                .put((byte)b).array();
+                .put((byte)b)
+                .put((byte)brightness)
+                .putShort((short)transitionTime)
+                .array();
+
+        return CommandUtils.prepareForFrames(bytes);
+
 
     }
 

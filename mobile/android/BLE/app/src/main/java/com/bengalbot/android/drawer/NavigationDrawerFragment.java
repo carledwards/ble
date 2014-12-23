@@ -60,8 +60,6 @@ public class NavigationDrawerFragment extends Fragment implements AdapterView.On
         mDrawerLayout = drawerLayout;
         mDrawerListener = new NavigationDrawerListener();
 
-        lockDrawer();
-
     }
 
     public void openDrawer() {
@@ -84,9 +82,7 @@ public class NavigationDrawerFragment extends Fragment implements AdapterView.On
         }
     }
 
-    public void lockDrawer() {
-        mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
-    }
+
 
     public void unlockDrawer() {
         mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);

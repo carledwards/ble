@@ -7,6 +7,7 @@ public enum Properties {
 
     MILLISECONDS,
     ANIMATION_TYPE,
+    TOTAL_CYCLES,
     RED,
     GREEN,
     BLUE,

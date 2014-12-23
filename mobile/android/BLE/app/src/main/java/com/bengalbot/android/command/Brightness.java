@@ -24,7 +24,11 @@ public class Brightness implements Command {
             percentage = (Integer)properties.get(Properties.PERCENTAGE);
         }
 
-        return ByteBuffer.allocate(5).put((byte)BRIGHTNESS_PROGRAMMING_COMMAND_CODE).putInt(percentage).array();
+        byte[] bytes = ByteBuffer.allocate(3)
+                .put(BRIGHTNESS_PROGRAMMING_COMMAND_CODE)
+                .putShort((short) percentage).array();
+
+        return CommandUtils.prepareForFrames(bytes);
     }
 
     @Override

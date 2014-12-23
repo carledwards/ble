@@ -1,6 +1,7 @@
 package com.bengalbot.android.command;
 
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.Map;
 
 /**
@@ -22,7 +23,9 @@ public class Delay implements Command {
         if (properties.containsKey(Properties.MILLISECONDS)) {
             duration = (Integer)properties.get(Properties.MILLISECONDS);
         }
-        return ByteBuffer.allocate(5).put((byte)DELAY_COMMAND_CODE).putInt((byte)duration).array();
+        byte[] bytes =  ByteBuffer.allocate(3).order(ByteOrder.BIG_ENDIAN).
+                put((byte) DELAY_COMMAND_CODE).putShort((short)duration).array();
+        return CommandUtils.prepareForFrames(bytes);
     }
 
     @Override

@@ -15,7 +15,7 @@ public class EndProgramming implements com.bengalbot.android.command.Command {
 
     @Override
     public byte[] parse() {
-        return new byte[] {(byte)END_PROGRAMMING_COMMAND_CODE};
+        return CommandUtils.prepareForFrames(new byte[]{(byte) END_PROGRAMMING_COMMAND_CODE});
     }
 
     @Override

@@ -85,6 +85,8 @@ public class HomeDrawerActivity extends ActionBarActivity implements NavigationD
         bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
 
         addFragment(PresetsFragment.newInstance());
+
+        lockDrawer();
     }
 
     @Override
@@ -128,6 +130,10 @@ public class HomeDrawerActivity extends ActionBarActivity implements NavigationD
         }
 
         super.onBackPressed();
+    }
+
+    public void lockDrawer() {
+        mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
     }
 
     @Override

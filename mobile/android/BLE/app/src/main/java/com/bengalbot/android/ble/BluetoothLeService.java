@@ -325,6 +325,7 @@ public class BluetoothLeService extends Service {
     @Subscribe
     public void onSendCommand(SendCommandEvent event) {
 
+
         List<BluetoothGattService> supportedGattServices = getSupportedGattServices();
         if (supportedGattServices == null) return;
 
@@ -336,9 +337,10 @@ public class BluetoothLeService extends Service {
 
                 byte[] bytes = event.command.parse();
                 for(int i = 0; i < bytes.length; i++) {
-                    Log.d("BENGALBOT", String.format("Command %s - sent #%x", event.command.getName(), bytes[i]));
+                    Log.d("BENGALBOT", String.format("Command %s - sent #%d", event.command.getName(), bytes[i]));
 
                 }
+
 
                 txCharacteristic.setValue(bytes);
                 setCharacteristicNotification(txCharacteristic, true);

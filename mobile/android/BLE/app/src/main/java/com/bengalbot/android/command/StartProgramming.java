@@ -17,7 +17,7 @@ public class StartProgramming implements Command {
 
     @Override
     public byte[] parse() {
-        return new byte[] {(byte)START_PROGRAMMING_COMMAND_CODE};
+        return CommandUtils.prepareForFrames(new byte[]{START_PROGRAMMING_COMMAND_CODE});
     }
 
     @Override

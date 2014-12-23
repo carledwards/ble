@@ -7,7 +7,9 @@ import android.support.v7.widget.CardView;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.bengalbot.android.R;
@@ -26,6 +28,9 @@ public class ColorView extends CardView  implements View.OnClickListener, Comman
 
     private PresetViewActions mPresetViewctionsListener;
     private TextView mColorTextView;
+    private TextView mBrightnessTextView;
+    private SeekBar mSeekBar;
+    private EditText mDurationTransition;
     private ImageView mImageColor;
     private Map<Properties, Object> properties;
     private int mSelectedColor;
@@ -60,14 +65,32 @@ public class ColorView extends CardView  implements View.OnClickListener, Comman
         mColorTextView.setText(getResources().getString(R.string.color_value, 0, 0, 0));
         mImageColor = (ImageView)v.findViewById(R.id.color_selected);
         mImageColor.setOnClickListener(this);
+        mSeekBar = (SeekBar)v.findViewById(R.id.brightness_seek);
+        mBrightnessTextView = (TextView)v.findViewById(R.id.brightness_seek_label);
+        mDurationTransition = (EditText)v.findViewById(R.id.duration_transition_value);
 
+        mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                mBrightnessTextView.setText(getContext().getString(R.string.brightness_value, Integer.toString(i)) + "%");
+                properties.put(Properties.PERCENTAGE, i);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+
+        mBrightnessTextView.setText(getContext().getString(R.string.brightness_value, Integer.toString(mSeekBar.getProgress())) + "%");
         addView(v);
     }
 
-
-    private String colorToHexString(int color) {
-        return String.format("#%06X", 0xFFFFFFFF & color);
-    }
 
     @Override
     public void onClick(View view) {
@@ -121,6 +144,12 @@ public class ColorView extends CardView  implements View.OnClickListener, Comman
         properties.put(Properties.RED, Color.red(mSelectedColor));
         properties.put(Properties.GREEN, Color.green(mSelectedColor));
         properties.put(Properties.BLUE, Color.blue(mSelectedColor));
+
+        //percentage is set in the seekbar Progress
+
+        if (mDurationTransition.getText().length() > 0) {
+            properties.put(Properties.MILLISECONDS, Integer.valueOf(mDurationTransition.getText().toString()));
+        }
 
         command.create(properties);
         return command;

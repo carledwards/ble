@@ -6,6 +6,8 @@ import java.util.Map;
  */
 public interface Command {
 
+    public final static String TAG = "Command";
+
     /*
     00 startProgramming
     FF endProgramming
@@ -15,12 +17,19 @@ public interface Command {
     04 Brigthness
      */
 
-   public static final int START_PROGRAMMING_COMMAND_CODE       =       0x00;
-   public static final int END_PROGRAMMING_COMMAND_CODE         =       0xFF;
-   public static final int DELAY_COMMAND_CODE                   =       0x01;
-   public static final int ANIMATION_PROGRAMMING_COMMAND_CODE   =       0x02;
-   public static final int COLOR_PROGRAMMING_COMMAND_CODE       =       0x03;
-   public static final int BRIGHTNESS_PROGRAMMING_COMMAND_CODE  =       0x04;
+   public static final byte FRAME_START                          =       0x7E;
+   public static final byte FRAME_END                            =       0x7C;
+   public static final byte ESCAPE                               =      0x7D;
+   public static final byte START_PROGRAMMING_COMMAND_CODE       =       0x00;
+   public static final byte DELAY_COMMAND_CODE                   =       0x01;
+   public static final byte ANIMATION_PROGRAMMING_COMMAND_CODE   =       0x02;
+   public static final byte COLOR_PROGRAMMING_COMMAND_CODE       =       0x03;
+   public static final byte BRIGHTNESS_PROGRAMMING_COMMAND_CODE  =       0x04;
+
+   public static final byte FRAME_START_ESCAPE                   =       0x5E;
+   public static final byte FRAME_END_ESCAPE                     =       0x5C;
+   public static final byte ESCAPE_ESCAPE                        =       0x5D;
+    public static final int END_PROGRAMMING_COMMAND_CODE         =       0xFF;
 
    public void create(Map<com.bengalbot.android.command.Properties, Object> properties);
    public byte[] parse();
