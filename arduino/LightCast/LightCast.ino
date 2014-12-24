@@ -25,7 +25,7 @@
 #define COMMAND_SET_ANIMATION     0x03
 #define COMMAND_COLOR_TRANSITION  0x04
 
-#define MAX_COMMANDS        50
+#define MAX_COMMANDS        30
 #define MAX_COMMAND_BUFFER  7
 
 #define DEBUG  1
@@ -51,6 +51,7 @@ boolean inStepContinuation = false;
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, NEOPIXELS_PIN, NEO_GRB + NEO_KHZ800);
 Adafruit_BLE_UART BTLEserial = Adafruit_BLE_UART(ADAFRUITBLE_REQ, ADAFRUITBLE_RDY, ADAFRUITBLE_RST);
 aci_evt_opcode_t bleLastStatus = ACI_EVT_DISCONNECTED;
+unsigned long startTime;
 
 void setup()
 {
@@ -211,7 +212,6 @@ void appendToFrameBuffer(int dataByte) {
   }
 }
 
-unsigned long startTime;
 boolean runCommandDelay(boolean isContinuation) {
   unsigned long timeInMillis = (programSteps[programCounter][1] << 8) | programSteps[programCounter][2];
   if (isContinuation == false) {
@@ -225,10 +225,26 @@ boolean runCommandSetAnimation(boolean isContinuation) {
   return true;
 }
 
-int currentRedValue = 0;
-int currentGreenValue = 0;
-int currentBlueValue = 0;
-int currentBrightness = 0x20;
+unsigned int currentRedValue = 0;
+unsigned int currentGreenValue = 0;
+unsigned int currentBlueValue = 0;
+unsigned int currentBrightness = 0x20;
+unsigned int startingRedValue = 0;
+unsigned int startingGreenValue = 0;
+unsigned int startingBlueValue = 0;
+unsigned int startingBrightness = 0;
+
+void setPixelColorAndBrightness(unsigned int red, unsigned int green, unsigned int blue, unsigned int brightness) {
+  for(int i=0;i<NUMPIXELS;i++){
+    pixels.setPixelColor(i, pixels.Color(red, green, blue));
+    pixels.setBrightness(brightness);
+  }
+  pixels.show();
+  currentRedValue = red;
+  currentGreenValue = green;
+  currentBlueValue = blue;
+  currentBrightness = brightness;
+}
 
 boolean runCommandColorTransition(boolean isContinuation) {
   // redValue - 1-byte
@@ -237,13 +253,65 @@ boolean runCommandColorTransition(boolean isContinuation) {
   // brightness - 1 byte
   // transitionTimeInMillis - 2-bytes (big endian)
 
-  for(int i=0;i<NUMPIXELS;i++){
-    // pixels.Color takes RGB values, from 0,0,0 up to 255,255,255
-    pixels.setPixelColor(i, pixels.Color(programSteps[programCounter][1],programSteps[programCounter][2],programSteps[programCounter][3]));
-    pixels.setBrightness(programSteps[programCounter][4]);
-    pixels.show(); // This sends the updated pixel color to the hardware.
+  if (isContinuation == false) {
+    startTime = millis();
   }
-  return true;
+
+  unsigned int targetRedValue = programSteps[programCounter][1];
+  unsigned int targetGreenValue = programSteps[programCounter][2];
+  unsigned int targetBlueValue = programSteps[programCounter][3];
+  unsigned int targetBrightness = programSteps[programCounter][4];
+  unsigned long durationTimeInMillis = (programSteps[programCounter][5] << 8) | programSteps[programCounter][6];
+
+  unsigned long currentTime = millis();
+
+  if (currentTime-startTime > durationTimeInMillis) {
+    setPixelColorAndBrightness(targetRedValue, targetGreenValue, targetBlueValue, targetBrightness);
+    return true;
+  }
+ 
+  if (isContinuation == false) {
+    // first time in continuation, save off the original values
+    startingRedValue = currentRedValue;
+    startingGreenValue = currentGreenValue;
+    startingBlueValue = currentBlueValue;
+    startingBrightness = currentBrightness;
+  }
+
+  // calculate next step value for each item based upon elapsed time so far
+  float percentage = (currentTime-startTime)/float(durationTimeInMillis);
+  unsigned int redValue = 0;
+  unsigned int greenValue = 0;
+  unsigned int blueValue = 0;
+  unsigned int brightness = 0;
+  if (startingRedValue > targetRedValue) {
+    redValue = startingRedValue - ((startingRedValue-targetRedValue)*percentage);
+  }
+  else {
+    redValue = startingRedValue + ((targetRedValue-startingRedValue)*percentage);
+  }
+  if (startingGreenValue > targetGreenValue) {
+    greenValue = startingGreenValue - ((startingGreenValue-targetGreenValue)*percentage);
+  }
+  else {
+    greenValue = startingGreenValue + ((targetGreenValue-startingGreenValue)*percentage);
+  }
+  if (startingBlueValue > targetBlueValue) {
+    blueValue = startingBlueValue - ((startingBlueValue-targetBlueValue)*percentage);
+  }
+  else {
+    blueValue = startingBlueValue + ((targetBlueValue-startingBlueValue)*percentage);
+  }
+  if (startingBrightness > targetBrightness) {
+    brightness = startingBrightness - ((startingBrightness-targetBrightness)*percentage);
+  }
+  else {
+    brightness = startingBrightness + ((targetBrightness-startingBrightness)*percentage);
+  }
+  
+  setPixelColorAndBrightness(redValue, greenValue, blueValue, brightness);
+
+  return false;
 }
 
 void programLoop() {
