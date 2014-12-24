@@ -28,7 +28,7 @@
 #define MAX_COMMANDS        30
 #define MAX_COMMAND_BUFFER  7
 
-#define DEBUG  1
+#define DEBUG  0
 
 #define LOG_INFO(msg)              Serial.print(F("I: ")); Serial.println(F(msg))
 #define LOG_ERROR(msg)              Serial.print(F("E: ")); Serial.println(F(msg))
@@ -41,12 +41,12 @@
 
 boolean readingFrameData = false;
 boolean inFrameEscape = false;
-int frameBufferCount = 0;
-int frameBuffer[MAX_COMMAND_BUFFER];
+byte frameBufferCount = 0;
+byte frameBuffer[MAX_COMMAND_BUFFER];
 boolean inProgramming = false;
-int programSteps[MAX_COMMANDS][MAX_COMMAND_BUFFER];
-int programStepCount = 0;
-int programCounter = 0;
+byte programSteps[MAX_COMMANDS][MAX_COMMAND_BUFFER];
+byte programStepCount = 0;
+byte programCounter = 0;
 boolean inStepContinuation = false;
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, NEOPIXELS_PIN, NEO_GRB + NEO_KHZ800);
 Adafruit_BLE_UART BTLEserial = Adafruit_BLE_UART(ADAFRUITBLE_REQ, ADAFRUITBLE_RDY, ADAFRUITBLE_RST);
@@ -65,7 +65,7 @@ void setup()
   Serial.print(F("Light-Cast Ready"));
 }
 
-boolean addProgramStepFromFrameBuffer(int cmd, int dataLen) {
+boolean addProgramStepFromFrameBuffer(byte cmd, byte dataLen) {
   // sanity check
   if (cmd != frameBuffer[0]) {
     LOG_ERROR_CODE("inconsistency add step error, expected cmd: ", cmd);
@@ -79,12 +79,12 @@ boolean addProgramStepFromFrameBuffer(int cmd, int dataLen) {
   }
 
   // copy the command and the data
-  for (int i = 0; i < dataLen + 1; i++) {
+  for (byte i = 0; i < dataLen + 1; i++) {
     programSteps[programStepCount][i] = frameBuffer[i];
   }
 
   // clear out the remaining buffer
-  for (int i = dataLen + 1; i < MAX_COMMAND_BUFFER; i++) {
+  for (byte i = dataLen + 1; i < MAX_COMMAND_BUFFER; i++) {
     programSteps[programStepCount][i] = 0;
   }
   
@@ -93,7 +93,7 @@ boolean addProgramStepFromFrameBuffer(int cmd, int dataLen) {
   return true;
 }
 
-boolean assertCommandLen(int cmd, int expected, int actual) {
+boolean assertCommandLen(byte cmd, byte expected, byte actual) {
   if (expected != actual) {
     LOG_ERROR_CODE("invalid data for command: ", cmd);
     LOG_ERROR_CODE("expected: ", expected);
@@ -103,7 +103,7 @@ boolean assertCommandLen(int cmd, int expected, int actual) {
   return true;
 }
 
-boolean processDelayFrame(int dataLen) {
+boolean processDelayFrame(byte dataLen) {
   LOG_DEBUG("processDelayFrame");
 
   // delayInMillis - 2-bytes (big endian)
@@ -114,7 +114,7 @@ boolean processDelayFrame(int dataLen) {
   return addProgramStepFromFrameBuffer(COMMAND_DELAY, dataLen);
 }
 
-boolean processSetAnimationFrame(int dataLen) {
+boolean processSetAnimationFrame(byte dataLen) {
   LOG_DEBUG("cmdSetAnimation");
   
   // animationType - 1-byte
@@ -127,7 +127,7 @@ boolean processSetAnimationFrame(int dataLen) {
   return addProgramStepFromFrameBuffer(COMMAND_SET_ANIMATION, dataLen);
 }
 
-boolean processColorTransitionFrame(int dataLen) {
+boolean processColorTransitionFrame(byte dataLen) {
   LOG_DEBUG("cmdColorTransition");
 
   // redValue - 1-byte
@@ -147,8 +147,8 @@ void processFrame() {
   if (frameBufferCount == 0) {
     return;
   }
-  int command = frameBuffer[0];
-  int commandDataLen = frameBufferCount - 1;
+  byte command = frameBuffer[0];
+  byte commandDataLen = frameBufferCount - 1;
   
   if (command == COMMAND_START_PROGRAMMING) {
       LOG_DEBUG("COMMAND_START_PROGRAMMING");
@@ -185,10 +185,6 @@ void processFrame() {
     default:
       LOG_ERROR_CODE("unknown command:",frameBuffer[0]);
   }
-  
-  if (saveCommand) {
-    // TODO
-  }
 }
 
 void resetFrame() {
@@ -198,7 +194,7 @@ void resetFrame() {
   frameBufferCount = 0;
 }
 
-void appendToFrameBuffer(int dataByte) {
+void appendToFrameBuffer(byte dataByte) {
   LOG_DEBUG("appendToFrameBuffer");
 
   if (frameBufferCount >= MAX_COMMAND_BUFFER) {
@@ -225,16 +221,16 @@ boolean runCommandSetAnimation(boolean isContinuation) {
   return true;
 }
 
-unsigned int currentRedValue = 0;
-unsigned int currentGreenValue = 0;
-unsigned int currentBlueValue = 0;
-unsigned int currentBrightness = 0x20;
-unsigned int startingRedValue = 0;
-unsigned int startingGreenValue = 0;
-unsigned int startingBlueValue = 0;
-unsigned int startingBrightness = 0;
+byte currentRedValue = 0;
+byte currentGreenValue = 0;
+byte currentBlueValue = 0;
+byte currentBrightness = 0x20;
+byte startingRedValue = 0;
+byte startingGreenValue = 0;
+byte startingBlueValue = 0;
+byte startingBrightness = 0;
 
-void setPixelColorAndBrightness(unsigned int red, unsigned int green, unsigned int blue, unsigned int brightness) {
+void setPixelColorAndBrightness(byte red, byte green, byte blue, byte brightness) {
   for(int i=0;i<NUMPIXELS;i++){
     pixels.setPixelColor(i, pixels.Color(red, green, blue));
     pixels.setBrightness(brightness);
@@ -257,10 +253,10 @@ boolean runCommandColorTransition(boolean isContinuation) {
     startTime = millis();
   }
 
-  unsigned int targetRedValue = programSteps[programCounter][1];
-  unsigned int targetGreenValue = programSteps[programCounter][2];
-  unsigned int targetBlueValue = programSteps[programCounter][3];
-  unsigned int targetBrightness = programSteps[programCounter][4];
+  byte targetRedValue = programSteps[programCounter][1];
+  byte targetGreenValue = programSteps[programCounter][2];
+  byte targetBlueValue = programSteps[programCounter][3];
+  byte targetBrightness = programSteps[programCounter][4];
   unsigned long durationTimeInMillis = (programSteps[programCounter][5] << 8) | programSteps[programCounter][6];
 
   unsigned long currentTime = millis();
@@ -280,10 +276,10 @@ boolean runCommandColorTransition(boolean isContinuation) {
 
   // calculate next step value for each item based upon elapsed time so far
   float percentage = (currentTime-startTime)/float(durationTimeInMillis);
-  unsigned int redValue = 0;
-  unsigned int greenValue = 0;
-  unsigned int blueValue = 0;
-  unsigned int brightness = 0;
+  byte redValue = 0;
+  byte greenValue = 0;
+  byte blueValue = 0;
+  byte brightness = 0;
   if (startingRedValue > targetRedValue) {
     redValue = startingRedValue - ((startingRedValue-targetRedValue)*percentage);
   }
@@ -321,7 +317,7 @@ void programLoop() {
   }
 
   boolean stepCompleted = true;
-  int cmd = programSteps[programCounter][0];
+  byte cmd = programSteps[programCounter][0];
   switch (cmd) {
     case COMMAND_DELAY:
       LOG_DEBUG("running COMMAND_DELAY");
@@ -377,7 +373,7 @@ void loop()
     bleLastStatus = status;
   }
 
-  int byteIn;
+  byte byteIn;
   
   if (BTLEserial.available()) {
     byteIn = BTLEserial.read();
