@@ -13,7 +13,8 @@ def print_error(msg):
     sys.stderr.write("%s\n" % msg)
 
 def print_serial_in(data):
-    sys.stdout.write("<-- [%s] - %s\n" % (",".join("{:02X}".format(x) for x in array('B', data)), data))
+#    sys.stdout.write("<-- [%s] - %s\n" % (",".join("{:02X}".format(x) for x in array('B', data)), data))
+    sys.stdout.write("%s" % data)
 
 def print_serial_out(data):
     sys.stdout.write("--> [%s]\n" % ",".join("{:02X}".format(x) for x in data))
@@ -72,6 +73,8 @@ class BleClient(object):
     def ser_write(self, data):
         print_serial_out(data)
         self.ser.write(data)
+        # add a delay to not overrun the buffer
+        time.sleep(.1)
 
     def append_escaped_data(self, dataList, arg):
         param_type = type(arg)
@@ -130,16 +133,24 @@ class BleClient(object):
         self.send_frame(0x03, animationType, int_to_big_endian(cycleTimeInMillis), numberOfCycles)
         
     def cmd_color_transition(self, redValue, greenValue, blueValue, brightness, transitionTimeInMillis):
-        self.send_frame(0x04, redValue, greenValue, blueValue, brightness, int_to_big_endian(transitionTimeInMillis))
+        self.send_frame(0x04, redValue, greenValue, blueValue, 0xFF & int(255*(brightness/100.)), int_to_big_endian(transitionTimeInMillis))
         
     
 def main():
     client = BleClient()
+    time.sleep(5)
     client.cmd_start_programming()
-    client.cmd_delay(1000)
-    client.cmd_set_animation(1, 100, 3)
-    client.cmd_color_transition(0, 0, 0, 100, 1000)
-    client.cmd_color_transition(255, 255, 255, 100, 1000)
+#    client.cmd_set_animation(1, 100, 3)
+    client.cmd_color_transition(0, 0, 0, 10, 1000)
+    client.cmd_delay(500)
+    client.cmd_color_transition(255, 255, 255, 10, 1000)
+    client.cmd_delay(500)
+    client.cmd_color_transition(255, 0, 0, 10, 1000)
+    client.cmd_delay(500)
+    client.cmd_color_transition(0, 255, 0, 10, 1000)
+    client.cmd_delay(500)
+    client.cmd_color_transition(0, 0, 255, 10, 1000)
+    client.cmd_delay(500)
     client.cmd_end_programming()
     time.sleep(100000)
     client.close_serial()

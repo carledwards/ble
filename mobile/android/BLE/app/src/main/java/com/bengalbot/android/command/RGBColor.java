@@ -1,5 +1,7 @@
 package com.bengalbot.android.command;
 
+import android.util.Log;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Map;
@@ -48,23 +50,19 @@ public class RGBColor implements Command {
         byte[] bytes = ByteBuffer.allocate(7)
                 .order(ByteOrder.BIG_ENDIAN)
                 .put(COLOR_PROGRAMMING_COMMAND_CODE)
-                .put((byte)r)
+                .put((byte) r)
                 .put((byte)g)
                 .put((byte)b)
-                .put((byte)brightness)
-                .putShort((short)transitionTime)
+                .put((byte) (0xFF * (brightness/100f))) // value is from 0-255 for brightness
+                .putShort((short) transitionTime)
                 .array();
 
         return CommandUtils.prepareForFrames(bytes);
-
-
     }
 
     @Override
     public void send() {
-
     }
-
 
     @Override
     public String getName() {
