@@ -132,7 +132,7 @@ class BleClient(object):
     def cmd_set_animation(self, animationType, cycleTimeInMillis, numberOfCycles):
         self.send_frame(0x03, animationType, int_to_big_endian(cycleTimeInMillis), numberOfCycles)
         
-    def cmd_color_transition(self, redValue, greenValue, blueValue, brightness, transitionTimeInMillis):
+    def cmd_set_rgb(self, redValue, greenValue, blueValue, brightness, transitionTimeInMillis):
         self.send_frame(0x04, redValue, greenValue, blueValue, 0xFF & int(255*(brightness/100.)), int_to_big_endian(transitionTimeInMillis))
         
     
@@ -141,16 +141,29 @@ def main():
     time.sleep(5)
     client.cmd_start_programming()
 #    client.cmd_set_animation(1, 100, 3)
-    client.cmd_color_transition(0, 0, 0, 10, 1000)
-    client.cmd_delay(500)
-    client.cmd_color_transition(255, 255, 255, 10, 1000)
-    client.cmd_delay(500)
-    client.cmd_color_transition(255, 0, 0, 10, 1000)
-    client.cmd_delay(500)
-    client.cmd_color_transition(0, 255, 0, 10, 1000)
-    client.cmd_delay(500)
-    client.cmd_color_transition(0, 0, 255, 10, 1000)
-    client.cmd_delay(500)
+    client.cmd_set_rgb(255, 0, 0, 10, 1000)
+    client.cmd_delay(1000)
+    client.cmd_set_rgb(0, 255, 0, 10, 1000)
+#    client.cmd_set_rgb(0, 0, 255, 10, 1000)
+#    client.cmd_set_rgb(0, 0, 255, 100, 1000)
+#    client.cmd_set_rgb(0, 0, 255, 10, 1000)
+#    client.cmd_set_rgb(0, 0, 255, 100, 1000)
+#    client.cmd_set_rgb(0, 0, 255, 10, 1000)
+
+#    client.cmd_set_rgb(255, 0, 0, 100, 10)
+#    client.cmd_delay(300)
+#    client.cmd_set_rgb(0, 255, 0, 100, 10)
+#    client.cmd_delay(300)
+#    client.cmd_set_rgb(0, 0, 255, 100, 10)
+#    client.cmd_delay(300)
+#    client.cmd_set_rgb(0, 0, 0, 10, 1000)
+
+#    client.cmd_set_rgb(255, 0, 0, 10, 1000)
+#    client.cmd_delay(500)
+#    client.cmd_set_rgb(0, 255, 0, 10, 1000)
+#    client.cmd_delay(500)
+#    client.cmd_set_rgb(0, 0, 255, 10, 1000)
+#    client.cmd_delay(500)
     client.cmd_end_programming()
     time.sleep(100000)
     client.close_serial()

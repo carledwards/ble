@@ -23,14 +23,14 @@
 #define COMMAND_END_PROGRAMMING   0x01
 #define COMMAND_DELAY             0x02
 #define COMMAND_SET_ANIMATION     0x03
-#define COMMAND_COLOR_TRANSITION  0x04
+#define COMMAND_SET_RGB           0x04
 
-#define MAX_COMMANDS        30
+#define MAX_COMMANDS        50
 #define MAX_COMMAND_BUFFER  7
 
 #define DEBUG  0
 
-#define LOG_INFO(msg)              Serial.print(F("I: ")); Serial.println(F(msg))
+#define LOG_INFO(msg)               Serial.print(F("I: ")); Serial.println(F(msg))
 #define LOG_ERROR(msg)              Serial.print(F("E: ")); Serial.println(F(msg))
 #define LOG_ERROR_CODE(msg,errCode) Serial.print(F("E: ")); Serial.print(F(msg)); Serial.println(errCode,HEX)
 #if DEBUG
@@ -38,6 +38,15 @@
 #else
   #define LOG_DEBUG(msg)
 #endif
+
+byte STARTUP_PROGRAM[][MAX_COMMAND_BUFFER+1] = {
+  {0x01, COMMAND_START_PROGRAMMING},
+  {0x07, COMMAND_SET_RGB, 0xFF, 0xFF, 0xFF, 0x00, 0x0B, 0xD0},
+  {0x03, COMMAND_DELAY, 0x07, 0xD0},
+  {0x07, COMMAND_SET_RGB, 0xFF, 0xFF, 0xFF, 0x30, 0x07, 0xD0},
+  {0x01, COMMAND_END_PROGRAMMING},
+  {0x00}
+};
 
 boolean readingFrameData = false;
 boolean inFrameEscape = false;
@@ -52,45 +61,43 @@ Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, NEOPIXELS_PIN, NEO_GRB +
 Adafruit_BLE_UART BTLEserial = Adafruit_BLE_UART(ADAFRUITBLE_REQ, ADAFRUITBLE_RDY, ADAFRUITBLE_RST);
 aci_evt_opcode_t bleLastStatus = ACI_EVT_DISCONNECTED;
 unsigned long startTime;
+byte currentRedValue = 0;
+byte currentGreenValue = 0;
+byte currentBlueValue = 0;
+byte currentBrightness = 0x00;
+byte startingRedValue = 0;
+byte startingGreenValue = 0;
+byte startingBlueValue = 0;
+byte startingBrightness = 0;
 
-void setup()
-{
-  // start serial port at 9600 bps:
-  Serial.begin(9600);
-  while (!Serial) {
-    ; // wait for serial port to connect
-  }
-  BTLEserial.begin();
-  pixels.begin();
-  Serial.print(F("Light-Cast Ready"));
-}
 
-boolean addProgramStepFromFrameBuffer(byte cmd, byte dataLen) {
-  // sanity check
-  if (cmd != frameBuffer[0]) {
-    LOG_ERROR_CODE("inconsistency add step error, expected cmd: ", cmd);
-    LOG_ERROR_CODE("got: ", frameBuffer[0]);
-    return false;
-  }
-
+boolean addProgramStep(byte cmd, byte commandData[], byte commandDataLength) {
   if (programStepCount >= MAX_COMMANDS) {
     LOG_ERROR("programming steps memory is full");
     return false;
   }
 
   // copy the command and the data
-  for (byte i = 0; i < dataLen + 1; i++) {
-    programSteps[programStepCount][i] = frameBuffer[i];
+  programSteps[programStepCount][0] = cmd;
+  for (byte i = 1; i < commandDataLength; i++) {
+    programSteps[programStepCount][i] = commandData[i-1];
   }
 
   // clear out the remaining buffer
-  for (byte i = dataLen + 1; i < MAX_COMMAND_BUFFER; i++) {
+  for (byte i = commandDataLength; i < MAX_COMMAND_BUFFER; i++) {
     programSteps[programStepCount][i] = 0;
   }
   
   programStepCount++;
   
   return true;
+}
+
+void eraseProgram() {
+  programStepCount = 0;
+  programCounter = 0;
+  inProgramming = true;
+  inStepContinuation = false;
 }
 
 boolean assertCommandLen(byte cmd, byte expected, byte actual) {
@@ -103,59 +110,55 @@ boolean assertCommandLen(byte cmd, byte expected, byte actual) {
   return true;
 }
 
-boolean processDelayFrame(byte dataLen) {
+boolean processDelayFrame(byte commandData[], byte commandDataLength) {
   LOG_DEBUG("processDelayFrame");
 
   // delayInMillis - 2-bytes (big endian)
-  if (assertCommandLen(COMMAND_DELAY, 2, dataLen) == false) {
+  if (assertCommandLen(COMMAND_DELAY, 2, commandDataLength) == false) {
     return false;
   }
   
-  return addProgramStepFromFrameBuffer(COMMAND_DELAY, dataLen);
+  return addProgramStep(COMMAND_DELAY, commandData, commandDataLength);
 }
 
-boolean processSetAnimationFrame(byte dataLen) {
+boolean processSetAnimationFrame(byte commandData[], byte commandDataLength) {
   LOG_DEBUG("cmdSetAnimation");
   
   // animationType - 1-byte
   // cycleTimeInMillis - 2-bytes (big endian)
   // numberOfCycles - 1-byte
-  if (assertCommandLen(COMMAND_SET_ANIMATION, 4, dataLen) == false) {
+  if (assertCommandLen(COMMAND_SET_ANIMATION, 4, commandDataLength) == false) {
     return false;
   }
 
-  return addProgramStepFromFrameBuffer(COMMAND_SET_ANIMATION, dataLen);
+  return addProgramStep(COMMAND_SET_ANIMATION, commandData, commandDataLength);
 }
 
-boolean processColorTransitionFrame(byte dataLen) {
-  LOG_DEBUG("cmdColorTransition");
+boolean processSetRGBFrame(byte commandData[], byte commandDataLength) {
+  LOG_DEBUG("cmdSetRGB");
 
   // redValue - 1-byte
   // greenValue - 1 byte
   // blueValue - 1 byte
   // brightness - 1 byte
   // transitionTimeInMillis - 2-bytes (big endian)
-  if (assertCommandLen(COMMAND_COLOR_TRANSITION, 6, dataLen) == false) {
+  if (assertCommandLen(COMMAND_SET_RGB, 6, commandDataLength) == false) {
     return false;
   }
-  return addProgramStepFromFrameBuffer(COMMAND_COLOR_TRANSITION, dataLen);
+  return addProgramStep(COMMAND_SET_RGB, commandData, commandDataLength);
 }
 
 // TODO clear out old bytes from the programming buffer
 
-void processFrame() {
-  if (frameBufferCount == 0) {
+void processFrame(byte frameData[], byte frameDataLength) {
+  if (frameDataLength == 0) {
     return;
   }
-  byte command = frameBuffer[0];
-  byte commandDataLen = frameBufferCount - 1;
+  byte command = frameData[0];
   
   if (command == COMMAND_START_PROGRAMMING) {
       LOG_DEBUG("COMMAND_START_PROGRAMMING");
-      programStepCount = 0;
-      programCounter = 0;
-      inProgramming = true;
-      inStepContinuation = false;
+      eraseProgram();
       return;
   }
   
@@ -172,18 +175,18 @@ void processFrame() {
       break;
     case COMMAND_DELAY:
       LOG_DEBUG("COMMAND_DELAY");
-      saveCommand = processDelayFrame(commandDataLen);
+      saveCommand = processDelayFrame(&frameData[1], frameDataLength-1);
       break;
     case COMMAND_SET_ANIMATION:
       LOG_DEBUG("COMMAND_SET_ANIMATION");
-      saveCommand = processSetAnimationFrame(commandDataLen);
+      saveCommand = processSetAnimationFrame(&frameData[1], frameDataLength-1);
       break;
-    case COMMAND_COLOR_TRANSITION:
-      LOG_DEBUG("COMMAND_COLOR_TRANSITION");
-      saveCommand = processColorTransitionFrame(commandDataLen);
+    case COMMAND_SET_RGB:
+      LOG_DEBUG("COMMAND_SET_RGB");
+      saveCommand = processSetRGBFrame(&frameData[1], frameDataLength-1);
       break;
     default:
-      LOG_ERROR_CODE("unknown command:",frameBuffer[0]);
+      LOG_ERROR_CODE("unknown command:",command);
   }
 }
 
@@ -221,15 +224,6 @@ boolean runCommandSetAnimation(boolean isContinuation) {
   return true;
 }
 
-byte currentRedValue = 0;
-byte currentGreenValue = 0;
-byte currentBlueValue = 0;
-byte currentBrightness = 0x20;
-byte startingRedValue = 0;
-byte startingGreenValue = 0;
-byte startingBlueValue = 0;
-byte startingBrightness = 0;
-
 void setPixelColorAndBrightness(byte red, byte green, byte blue, byte brightness) {
   for(int i=0;i<NUMPIXELS;i++){
     pixels.setPixelColor(i, pixels.Color(red, green, blue));
@@ -242,7 +236,7 @@ void setPixelColorAndBrightness(byte red, byte green, byte blue, byte brightness
   currentBrightness = brightness;
 }
 
-boolean runCommandColorTransition(boolean isContinuation) {
+boolean runCommandSetRGB(boolean isContinuation) {
   // redValue - 1-byte
   // greenValue - 1 byte
   // blueValue - 1 byte
@@ -326,9 +320,9 @@ void programLoop() {
     case COMMAND_SET_ANIMATION:
       LOG_DEBUG("running COMMAND_SET_ANIMATION");
       break;
-    case COMMAND_COLOR_TRANSITION:
-      LOG_DEBUG("running COMMAND_COLOR_TRANSITION");
-      stepCompleted = runCommandColorTransition(inStepContinuation);
+    case COMMAND_SET_RGB:
+      LOG_DEBUG("running COMMAND_SET_RGB");
+      stepCompleted = runCommandSetRGB(inStepContinuation);
       break;
     default:
       LOG_ERROR_CODE("command handler missing: ", cmd);
@@ -346,6 +340,22 @@ void programLoop() {
   else {
     inStepContinuation = true;
   }  
+}
+
+void setup()
+{
+  // start serial port at 9600 bps:
+  Serial.begin(9600);
+  while (!Serial) {
+    ; // wait for serial port to connect
+  }
+  BTLEserial.begin();
+  pixels.begin();
+  Serial.print(F("Light-Cast Ready"));
+
+  for(int i=0; STARTUP_PROGRAM[i][0]!=0x00; i++){
+    processFrame(&STARTUP_PROGRAM[i][1], STARTUP_PROGRAM[i][0]);
+  }
 }
 
 void loop()
@@ -413,7 +423,7 @@ void loop()
   } else if (readingFrameData == true) {
     if (byteIn == FRAME_END) {
       LOG_DEBUG("got FRAME_END");
-      processFrame();
+      processFrame(frameBuffer, frameBufferCount);
       resetFrame();
       return;
     }
