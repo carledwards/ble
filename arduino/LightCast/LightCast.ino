@@ -47,6 +47,7 @@ boolean inProgramming = false;
 int programSteps[MAX_COMMANDS][MAX_COMMAND_BUFFER];
 int programStepCount = 0;
 int programCounter = 0;
+boolean inStepContinuation = false;
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, NEOPIXELS_PIN, NEO_GRB + NEO_KHZ800);
 Adafruit_BLE_UART BTLEserial = Adafruit_BLE_UART(ADAFRUITBLE_REQ, ADAFRUITBLE_RDY, ADAFRUITBLE_RST);
 aci_evt_opcode_t bleLastStatus = ACI_EVT_DISCONNECTED;
@@ -153,6 +154,7 @@ void processFrame() {
       programStepCount = 0;
       programCounter = 0;
       inProgramming = true;
+      inStepContinuation = false;
       return;
   }
   
@@ -184,7 +186,7 @@ void processFrame() {
   }
   
   if (saveCommand) {
-    
+    // TODO
   }
 }
 
@@ -209,20 +211,26 @@ void appendToFrameBuffer(int dataByte) {
   }
 }
 
-void runCommandDelay() {
-  long timeInMillis = (programSteps[programCounter][1] << 8) | programSteps[programCounter][2];
-  delay(timeInMillis);
+unsigned long startTime;
+boolean runCommandDelay(boolean isContinuation) {
+  unsigned long timeInMillis = (programSteps[programCounter][1] << 8) | programSteps[programCounter][2];
+  if (isContinuation == false) {
+    startTime = millis();
+  }
+
+  return (millis() - startTime > timeInMillis);
 }
 
-void runCommandSetAnimation() {
+boolean runCommandSetAnimation(boolean isContinuation) {
+  return true;
 }
 
 int currentRedValue = 0;
 int currentGreenValue = 0;
 int currentBlueValue = 0;
-int currentBrightness = 100;
+int currentBrightness = 0x20;
 
-void runCommandColorTransition() {
+boolean runCommandColorTransition(boolean isContinuation) {
   // redValue - 1-byte
   // greenValue - 1 byte
   // blueValue - 1 byte
@@ -234,14 +242,8 @@ void runCommandColorTransition() {
     pixels.setPixelColor(i, pixels.Color(programSteps[programCounter][1],programSteps[programCounter][2],programSteps[programCounter][3]));
     pixels.setBrightness(programSteps[programCounter][4]);
     pixels.show(); // This sends the updated pixel color to the hardware.
-//    delay(delayval); // Delay for a period of time (in milliseconds).
   }
-
-//  long currentTime = 
-
-  
-//  long timeInMillis = (programSteps[programCounter][5] << 8) | programSteps[programCounter][6];
-
+  return true;
 }
 
 void programLoop() {
@@ -250,29 +252,36 @@ void programLoop() {
     return;
   }
 
+  boolean stepCompleted = true;
   int cmd = programSteps[programCounter][0];
   switch (cmd) {
     case COMMAND_DELAY:
       LOG_DEBUG("running COMMAND_DELAY");
-      runCommandDelay();
+      stepCompleted = runCommandDelay(inStepContinuation);
       break;
     case COMMAND_SET_ANIMATION:
       LOG_DEBUG("running COMMAND_SET_ANIMATION");
       break;
     case COMMAND_COLOR_TRANSITION:
       LOG_DEBUG("running COMMAND_COLOR_TRANSITION");
-      runCommandColorTransition();
+      stepCompleted = runCommandColorTransition(inStepContinuation);
       break;
     default:
       LOG_ERROR_CODE("command handler missing: ", cmd);
   }
-  
-  programCounter++;
 
-  // if overflowed, jump back to the beginning
-  if (programCounter >= programStepCount) {
-    programCounter = 0;
+  if (stepCompleted) {
+    inStepContinuation = false;
+    programCounter++;
+  
+    // if overflowed, jump back to the beginning
+    if (programCounter >= programStepCount) {
+      programCounter = 0;
+    }
   }
+  else {
+    inStepContinuation = true;
+  }  
 }
 
 void loop()
