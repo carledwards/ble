@@ -1,0 +1,14 @@
+
+# Project files
+.idea
+.settings
+
+# generated files
+bin
+gen
+build
+.gradle
+/local.properties
+.DS_Store
+/build
+/colorPickerView/build
