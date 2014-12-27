@@ -5,7 +5,7 @@ android {
     buildToolsVersion "20.0.0"
 
     defaultConfig {
-        applicationId "ble.android.carl.com.ble"
+        applicationId "com.bengalbot.lightcast"
         minSdkVersion 18
         targetSdkVersion 18
         versionCode 1

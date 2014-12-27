@@ -28,7 +28,7 @@
 
     <fragment
         android:id="@+id/fragment_drawer"
-        android:name="com.bengalbot.android.drawer.NavigationDrawerFragment"
+        android:name="com.bengalbot.lightcast.drawer.NavigationDrawerFragment"
         android:layout_width="304dp"
         android:layout_height="match_parent"
         android:layout_gravity="start"
